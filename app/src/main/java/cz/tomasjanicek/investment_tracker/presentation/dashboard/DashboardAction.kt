@@ -1,7 +1,12 @@
 package cz.tomasjanicek.investment_tracker.presentation.dashboard
 
 sealed interface DashboardAction {
-    object RefreshPrices : DashboardAction
-    data class DeleteAsset(val ticker: String) : DashboardAction
-    data class NavigateToDetail(val ticker: String) : DashboardAction
+    /**
+     * Definuje veškeré uživatelské záměry (intentions) na obrazovce Dashboard.
+     * MVI pattern: UI pouze odesílá tyto akce a pasivně reaguje na stav.
+     */
+    data object RefreshPrices : DashboardAction
+    data class OnAssetClicked(val ticker: String) : DashboardAction
+    data class OnDeleteAsset(val ticker: String) : DashboardAction
+    data object OnAddAssetClicked : DashboardAction
 }
