@@ -9,35 +9,41 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = AppColors.MidnightNavy,
+    secondary = AppColors.MutedGold,
+    tertiary = AppColors.ProfitGreen,
+    surface = AppColors.MidnightNavy,
+    background = AppColors.MidnightNavy,
+    onPrimary = Color.White,
+    onSecondary = Color.Black,
+    onSurface = Color.White,
+    onBackground = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = AppColors.MidnightNavy,
+    secondary = AppColors.MutedGold,
+    tertiary = AppColors.ProfitGreen,
+    surface = AppColors.ParchmentSurface,
+    background = AppColors.ParchmentSurface,
+    surfaceVariant = AppColors.PeriwinkleBlue,
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    onSecondary = AppColors.MidnightNavy, // Tmavě modrý text na zlaté
+    onSurface = AppColors.MidnightNavy,
+    onBackground = AppColors.MidnightNavy,
+    onSurfaceVariant = AppColors.MidnightNavy,
+    error = AppColors.LossRed
 )
 
 @Composable
 fun Investment_TrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color is disabled by default to show our custom palette
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

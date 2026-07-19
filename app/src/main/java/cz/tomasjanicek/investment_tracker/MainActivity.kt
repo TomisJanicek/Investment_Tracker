@@ -19,12 +19,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import cz.tomasjanicek.investment_tracker.presentation.add_edit.AddEditAction
+import cz.tomasjanicek.investment_tracker.presentation.add_edit.AddEditScreen
+import cz.tomasjanicek.investment_tracker.presentation.add_edit.AddEditViewModel
 import cz.tomasjanicek.investment_tracker.presentation.dashboard.DashboardAction
 import cz.tomasjanicek.investment_tracker.presentation.dashboard.DashboardScreen
 import cz.tomasjanicek.investment_tracker.presentation.dashboard.DashboardViewModel
 import cz.tomasjanicek.investment_tracker.presentation.detail.DetailAction
 import cz.tomasjanicek.investment_tracker.presentation.detail.DetailScreen
 import cz.tomasjanicek.investment_tracker.presentation.detail.DetailViewModel
+import cz.tomasjanicek.investment_tracker.presentation.manage_assets.ManageAssetsAction
+import cz.tomasjanicek.investment_tracker.presentation.manage_assets.ManageAssetsScreen
+import cz.tomasjanicek.investment_tracker.presentation.manage_assets.ManageAssetsViewModel
+import cz.tomasjanicek.investment_tracker.presentation.manage_prices.ManagePricesScreen
+import cz.tomasjanicek.investment_tracker.presentation.manage_prices.ManagePricesViewModel
 import cz.tomasjanicek.investment_tracker.ui.theme.Investment_TrackerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -71,14 +79,74 @@ fun InvestmentAppNavigation(modifier: Modifier = Modifier) {
                         is DashboardAction.OnAssetClicked -> {
                             navController.navigate("detail/${action.ticker}")
                         }
-                        // Ostatní akce (Refresh, Add) předáme rovnou do ViewModelu
+                        // Otevření obrazovky pro přidání nového aktiva
+                        is DashboardAction.OnAddAssetClicked -> {
+                            navController.navigate("add_edit")
+                        }
+                        // Správa cen
+                        is DashboardAction.OnManagePricesClicked -> {
+                            navController.navigate("manage_prices")
+                        }
+                        // Správa aktiv (Ticketů)
+                        is DashboardAction.OnManageAssetsClicked -> {
+                            navController.navigate("manage_assets")
+                        }
+                        // Ostatní akce (Refresh) předáme rovnou do ViewModelu
                         else -> viewModel.onAction(action)
                     }
                 }
             )
         }
 
-        // 2. OBRAZOVKA: DETAIL AKTIVA (přijímá parametr ticker)
+        // 2. OBRAZOVKA: SPRÁVA CEN
+        composable("manage_prices") {
+            val viewModel: ManagePricesViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+            ManagePricesScreen(
+                state = state,
+                events = viewModel.events,
+                onAction = viewModel::onAction,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // 3. OBRAZOVKA: SPRÁVA AKTIV (TICKETŮ)
+        composable("manage_assets") {
+            val viewModel: ManageAssetsViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+            ManageAssetsScreen(
+                state = state,
+                events = viewModel.events,
+                onAction = viewModel::onAction,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // 4. OBRAZOVKA: ADD/EDIT AKTIVA
+        composable(
+            route = "add_edit?ticker={ticker}",
+            arguments = listOf(
+                navArgument("ticker") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            val viewModel: AddEditViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+            AddEditScreen(
+                state = state,
+                events = viewModel.events,
+                onAction = viewModel::onAction,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // 3. OBRAZOVKA: DETAIL AKTIVA (přijímá parametr ticker)
         composable(
             route = "detail/{ticker}",
             arguments = listOf(
@@ -95,6 +163,10 @@ fun InvestmentAppNavigation(modifier: Modifier = Modifier) {
                         // Zpracování tlačítka Zpět v top baru detailu
                         is DetailAction.OnBackClicked -> {
                             navController.popBackStack()
+                        }
+                        // Přechod na obrazovku přidání transakce pro toto aktivum
+                        is DetailAction.OnAddTransactionClicked -> {
+                            navController.navigate("add_edit?ticker=${state.ticker}")
                         }
                         else -> viewModel.onAction(action)
                     }

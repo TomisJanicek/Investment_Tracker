@@ -3,7 +3,6 @@ package cz.tomasjanicek.investment_tracker.presentation.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cz.tomasjanicek.investment_tracker.domain.usecase.AddTransactionUseCase
 import cz.tomasjanicek.investment_tracker.domain.usecase.DeleteTransactionUseCase
 import cz.tomasjanicek.investment_tracker.domain.usecase.GetAssetDetailsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +19,6 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     private val getAssetDetailsUseCase: GetAssetDetailsUseCase,
-    private val addTransactionUseCase: AddTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -65,32 +63,8 @@ class DetailViewModel @Inject constructor(
 
     fun onAction(action: DetailAction) {
         when (action) {
-            DetailAction.OnAddTransactionClicked -> _uiState.update { it.copy(isShowingAddDialog = true) }
-            DetailAction.OnDismissDialog -> _uiState.update { it.copy(isShowingAddDialog = false) }
-            is DetailAction.OnSubmitTransaction -> executeAddTransaction(action.type, action.quantity, action.price)
             is DetailAction.OnDeleteTransaction -> executeDeleteTransaction(action.id)
             else -> Unit
-        }
-    }
-
-    private fun executeAddTransaction(type: String, quantityStr: String, priceStr: String) {
-        viewModelScope.launch {
-            try {
-                // Sanitizace vstupů: Nahrazení desetiných čárek tečkou pro kompatibilitu s BigDecimal
-                val cleanQty = quantityStr.replace(',', '.').trim()
-                val cleanPrice = priceStr.replace(',', '.').trim()
-
-                val quantity = BigDecimal(cleanQty)
-                val price = BigDecimal(cleanPrice)
-
-                // Validační logika na straně ViewModelu před voláním UseCase
-                if (quantity > BigDecimal.ZERO && price > BigDecimal.ZERO) {
-                    addTransactionUseCase(ticker, type, quantity, price)
-                    _uiState.update { it.copy(isShowingAddDialog = false) }
-                }
-            } catch (e: NumberFormatException) {
-                // V reálné produkci zde proběhne logování chyby formátu
-            }
         }
     }
 

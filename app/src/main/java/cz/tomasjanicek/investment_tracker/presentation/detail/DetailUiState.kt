@@ -13,8 +13,7 @@ data class DetailUiState(
     val currentPrice: BigDecimal = BigDecimal.ZERO,
     val totalQuantity: BigDecimal = BigDecimal.ZERO,
     val totalValue: BigDecimal = BigDecimal.ZERO,
-    val transactions: List<TransactionUiModel> = emptyList(),
-    val isShowingAddDialog: Boolean = false
+    val transactions: List<TransactionUiModel> = emptyList()
 )
 
 /**

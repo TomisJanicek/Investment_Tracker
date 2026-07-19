@@ -9,4 +9,6 @@ sealed interface DashboardAction {
     data class OnAssetClicked(val ticker: String) : DashboardAction
     data class OnDeleteAsset(val ticker: String) : DashboardAction
     data object OnAddAssetClicked : DashboardAction
+    data object OnManagePricesClicked : DashboardAction
+    data object OnManageAssetsClicked : DashboardAction
 }

@@ -1,9 +1,12 @@
 package cz.tomasjanicek.investment_tracker.domain.repository
 
+import cz.tomasjanicek.investment_tracker.domain.model.AssetDefinitionDomainModel
 import cz.tomasjanicek.investment_tracker.domain.model.AssetDetailDomainModel
 import cz.tomasjanicek.investment_tracker.domain.model.AssetDomainModel
+import cz.tomasjanicek.investment_tracker.domain.model.PricePointDomainModel
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
  * Centrální kontrakt doménové vrstvy pro přístup k datům portfolia.
@@ -25,12 +28,39 @@ interface PortfolioRepository {
     fun getAllAssets(): Flow<List<AssetDomainModel>>
 
     /**
+     * Poskytuje reaktivní stream mapy aktuálních cen (ticker -> cena).
+     */
+    fun getPrices(): Flow<Map<String, BigDecimal>>
+
+    /**
      * Spouští asynchronní aktualizaci tržních cen z externího zdroje (REST API).
-     * * Metoda nevrací žádná data přímo do UI – plní pouze roli spouštěče pro synchronizaci
-     * s lokální databází (Pattern: Single Source of Truth / Offline-First). Nové kurzy
-     * se do aplikace propíšou automaticky prostřednictvím aktivních [Flow] streamů.
      */
     suspend fun refreshCurrentPrices()
+
+    /**
+     * Manuálně přidá nový cenový bod do historie konkrétního aktiva.
+     */
+    suspend fun addAssetPrice(ticker: String, price: BigDecimal, timestamp: LocalDateTime)
+
+    /**
+     * Vrací kompletní historii cen pro daný ticker.
+     */
+    fun getPriceHistory(ticker: String): Flow<List<PricePointDomainModel>>
+
+    /**
+     * Upraví existující cenový bod v historii.
+     */
+    suspend fun editAssetPrice(
+        ticker: String,
+        oldTimestamp: LocalDateTime,
+        newPrice: BigDecimal,
+        newTimestamp: LocalDateTime
+    )
+
+    /**
+     * Trvale odstraní konkrétní cenový bod z historie.
+     */
+    suspend fun deleteAssetPrice(ticker: String, timestamp: LocalDateTime)
 
 
     // --- DETAIL AKTIVA A AUDITNÍ STOPA TRANSAKCÍ ---
@@ -51,8 +81,15 @@ interface PortfolioRepository {
      * @param type Typ transakce ("BUY" pro nákup, "SELL" pro redukci pozice).
      * @param quantity Počet kusů (přísně kladné číslo v [BigDecimal]).
      * @param price Cena za jednu jednotku v měně portfolia.
+     * @param timestamp Čas provedení transakce.
      */
-    suspend fun addTransaction(ticker: String, type: String, quantity: BigDecimal, price: BigDecimal)
+    suspend fun addTransaction(
+        ticker: String, 
+        type: String, 
+        quantity: BigDecimal, 
+        price: BigDecimal,
+        timestamp: LocalDateTime = LocalDateTime.now()
+    )
 
     /**
      * Trvale odstraní transakci z auditní stopy podle jejího unikátního identifikátoru.
@@ -60,4 +97,21 @@ interface PortfolioRepository {
      * @param transactionId Primární klíč transakce v databázi.
      */
     suspend fun deleteTransaction(transactionId: Long)
+
+    // --- ASSETS (TICKERS) ---
+
+    /**
+     * Vrací stream všech definovaných aktiv.
+     */
+    fun getAllDefinedAssets(): Flow<List<AssetDefinitionDomainModel>>
+
+    /**
+     * Vytvoří nebo upraví definici aktiva.
+     */
+    suspend fun upsertAssetDefinition(ticker: String, name: String)
+
+    /**
+     * Odstraní definici aktiva.
+     */
+    suspend fun deleteAssetDefinition(ticker: String)
 }

@@ -104,15 +104,6 @@ fun DetailScreen(
                 }
             }
         }
-
-        if (state.isShowingAddDialog) {
-            AddTransactionDialog(
-                onDismiss = { onAction(DetailAction.OnDismissDialog) },
-                onSubmit = { type, qty, price ->
-                    onAction(DetailAction.OnSubmitTransaction(type, qty, price))
-                }
-            )
-        }
     }
 }
 
@@ -121,7 +112,7 @@ fun AssetOverviewCard(state: DetailUiState) {
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -136,24 +127,24 @@ fun AssetOverviewCard(state: DetailUiState) {
                 Text(
                     text = "Moje pozice",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
                 Text(
                     text = "${state.totalQuantity} ks",
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "Aktuální cena",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
                 Text(
                     text = formatCurrency(state.currentPrice),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.primary // Tmavě modrá pro cenu
                 )
             }
         }
@@ -166,7 +157,8 @@ fun TransactionItem(
     onDelete: () -> Unit
 ) {
     val isBuy = transaction.type == "BUY"
-    val badgeColor = if (isBuy) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+    // BUY = Investiční zelená, SELL = Muted Gold (jako protiklad) nebo Error Red
+    val badgeColor = if (isBuy) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
     val badgeText = if (isBuy) "NÁKUP" else "PRODEJ"
 
     Card(
@@ -219,71 +211,7 @@ fun TransactionItem(
     }
 }
 
-@Composable
-fun AddTransactionDialog(
-    onDismiss: () -> Unit,
-    onSubmit: (type: String, quantity: String, price: String) -> Unit
-) {
-    var selectedType by remember { mutableStateOf("BUY") }
-    var quantity by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "Nová transakce", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Jednoduchý přepínač Nákup / Prodej
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = selectedType == "BUY",
-                        onClick = { selectedType = "BUY" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                    ) {
-                        Text("Nákup")
-                    }
-                    SegmentedButton(
-                        selected = selectedType == "SELL",
-                        onClick = { selectedType = "SELL" },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                    ) {
-                        Text("Prodej")
-                    }
-                }
-
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { quantity = it },
-                    label = { Text("Počet kusů") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = price,
-                    onValueChange = { price = it },
-                    label = { Text("Cena za kus (CZK)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onSubmit(selectedType, quantity, price) },
-                enabled = quantity.isNotBlank() && price.isNotBlank()
-            ) {
-                Text("Uložit")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Zrušit")
-            }
-        },
-        shape = RoundedCornerShape(28.dp) // Expressive dialog shape
-    )
-}
 
 private fun formatCurrency(value: BigDecimal): String {
     val format = NumberFormat.getCurrencyInstance(Locale("cs", "CZ"))

@@ -18,16 +18,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,7 +55,7 @@ fun DashboardScreen(
 ) {
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            MediumTopAppBar(
                 title = {
                     Text(
                         text = "Moje Portfolio",
@@ -61,6 +65,18 @@ fun DashboardScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = { onAction(DashboardAction.OnManageAssetsClicked) }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Správa aktiv"
+                        )
+                    }
+                    IconButton(onClick = { onAction(DashboardAction.OnManagePricesClicked) }) {
+                        Icon(
+                            imageVector = Icons.Default.CurrencyExchange,
+                            contentDescription = "Spravovat ceny"
+                        )
+                    }
                     IconButton(onClick = { onAction(DashboardAction.RefreshPrices) }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
@@ -71,11 +87,10 @@ fun DashboardScreen(
             )
         },
         floatingActionButton = {
-            // Expressive FAB - větší a výraznější
-            LargeFloatingActionButton(
+            FloatingActionButton(
                 onClick = { onAction(DashboardAction.OnAddAssetClicked) },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -140,16 +155,9 @@ fun PortfolioHeroCard(
     modifier: Modifier = Modifier
 ) {
     val isPositive = percentage >= 0
-    val containerColor = if (isPositive) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
-    }
-    val contentColor = if (isPositive) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onErrorContainer
-    }
+    val containerColor = MaterialTheme.colorScheme.primary
+    val contentColor = MaterialTheme.colorScheme.onPrimary
+    val accentColor = MaterialTheme.colorScheme.secondary // Muted Gold
 
     // M3 Expressive: Výrazné zaoblení (32.dp) a dynamická změna velikosti
     Card(
@@ -172,13 +180,13 @@ fun PortfolioHeroCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Expressive Typography - obří text pro peníze
+            // Expressive Typography - Zlatá pro hlavní číslo (Premium look)
             Text(
                 text = formatCurrency(totalValue),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.ExtraBold
                 ),
-                color = contentColor
+                color = accentColor
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -192,12 +200,14 @@ fun PortfolioHeroCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val sign = if (isPositive) "+" else ""
+                    val profitColor = if (isPositive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+                    
                     Text(
                         text = "$sign${formatCurrency(profitLoss)} ($sign${String.format("%.2f", percentage)} %)",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = contentColor
+                        color = if (isPositive) profitColor else MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -211,11 +221,11 @@ fun AssetExpressiveItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Menší, ale stále výrazné zaoblení pro položky v seznamu
+    // Použití Periwinkle Blue (surfaceVariant) pro odlišení karet
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ),
         modifier = modifier
             .fillMaxWidth()
@@ -238,7 +248,7 @@ fun AssetExpressiveItem(
                 Text(
                     text = "${asset.totalQuantity} ks",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
 
@@ -249,12 +259,12 @@ fun AssetExpressiveItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                val color = if (asset.isProfit) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                val profitColor = if (asset.isProfit) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
                 val sign = if (asset.isProfit) "+" else ""
                 Text(
                     text = "$sign${String.format("%.2f", asset.profitLossPercentage)} %",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = color
+                    color = profitColor
                 )
             }
         }
